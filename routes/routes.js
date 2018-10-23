@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+
+const User = mongoose.model('User');
 
 router.get('/register', (req, res, next) => {
     res.json({
@@ -34,12 +37,34 @@ router.post('/register', (req, res, next) => {
     }
 
     //TODO Do registering
+    User.find({username: userName})
+        .then((user) => {
+            if(user !== null) {
+                res.sendStatus(409);
+            } else {
+                const user = new User();
+                user.username = userName;
+                user.email = email;
+                user.password = password;
 
-    res.json({
-        message: "User has been successfully registered",
-        auth: true, //TODO Add actual value
-        token: '' //TODO Add actual token
-    })
+                User.create(user)
+                    .then(() => {
+                        res.status(201);
+                        res.json({
+                            message: "User has been successfully registered",
+                            auth: true,
+                            token: '' //TODO Add actual token
+                        })
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        res.status(500);
+                        res.json({
+                            message: "Error while registering user."
+                        })
+                    })
+            }
+        });
 });
 
 router.get('/login', (req, res, next) => {
