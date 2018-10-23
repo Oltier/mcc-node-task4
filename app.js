@@ -6,7 +6,7 @@ const logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
 
-const config = require('config');
+const config = require('./config');
 const User = require('./models/user');
 
 const indexRouter = require('./routes/routes');
@@ -19,7 +19,7 @@ app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -27,36 +27,41 @@ app.use(session({
     cookie: {
         maxAge: 600000 * 24
     },
-    secret: config.secret
+    secret: config.secret,
+    resave: true,
+    saveUninitialized: false
 }));
 
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  next(createError(404));
+    next(createError(404));
 });
 
 // error handler
 app.use((err, req, res, next) => {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error');
 });
 
 const dbUrl = "mongodb://localhost:27017";
 
-mongoose.connect(dbUrl, {useNewUrlParser: true});
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useCreateIndex: true
+});
 mongoose.Promise = global.Promise;
 app.db = mongoose.connection;
 
 const server = app.listen(3000, 'localhost', function () {
     console.log('Server started.');
-    app.db.on('error', function(){
+    app.db.on('error', function () {
         console.error("Couldn't connect to database.");
         process.exit(1)
     });

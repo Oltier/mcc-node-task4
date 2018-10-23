@@ -7,6 +7,8 @@ const config = require('../config');
 
 const User = mongoose.model('User');
 
+const verifyToken = require('../auth/verifyToken');
+
 router.get('/register', (req, res, next) => {
     res.json({
         message: 'Register User Page'
@@ -122,8 +124,19 @@ router.post('/login', (req, res, next) => {
         });
 });
 
-router.get('/profile', (req, res, next) => {
+router.get('/profile', verifyToken, (req, res, next) => {
+    const username = req.body.username;
+    const email = req.body.email;
+    const token = req.session.token;
+    const userId = req.body.userId;
 
+    res.json({
+        username,
+        email,
+        auth: true,
+        token,
+        userId
+    })
 });
 
 router.get('/logout', (req, res, next) => {
