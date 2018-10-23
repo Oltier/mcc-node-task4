@@ -55,7 +55,6 @@ router.post('/register', (req, res, next) => {
                 User.create(user)
                     .then(() => {
                         req.session.token = generateJwt(user);
-                        res.status(201);
                         res.json({
                             message: "User has been successfully registered",
                             auth: true,
@@ -129,15 +128,17 @@ router.post('/login', (req, res, next) => {
 });
 
 router.get('/profile', verifyToken, (req, res, next) => {
-    const username = req.body.username;
-    const email = req.body.email;
-    const token = req.session.token;
-    const userId = req.body.userId;
+    const username = req.body.username || null;
+    const email = req.body.email || null;
+    const token = req.session.token || null;
+    const userId = req.body.userId || null;
+    const auth = req.body.auth || null;
 
     res.json({
+        message: "User logged in!",
         username,
         email,
-        auth: true,
+        auth,
         token,
         userId
     })

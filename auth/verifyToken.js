@@ -5,7 +5,8 @@ const User = require('mongoose').model('User');
 module.exports = (req, res, next) => {
     if (!req.session.hasOwnProperty('token') || !req.session.token) {
         console.error("GET /profile: Token not in the session");
-        return res.sendStatus(401)
+        req.body.auth = false;
+        return next();
     }
 
     let decodedToken;
@@ -14,22 +15,25 @@ module.exports = (req, res, next) => {
     } catch(err) {
         console.error(`GET /profile: ${err}`);
         console.error("GET /profile: Error on jwt verification");
-        return res.sendStatus(401);
+        req.body.auth = false;
+        return next();
     }
 
     const userId = decodedToken.id || null;
 
     User.findById(userId)
         .then((user) => {
-            if(!user || user._id !== userId) {
+            if(!user || user._id.toString() !== userId) {
+                req.body.auth = false;
                 console.error(`GET /profile: User not found for ${user} or userId didn't match: ${user._id} , ${userId}`);
-                return res.sendStatus(401);
+                return next();
             }
 
             req.body.username = user.username;
             req.body.email = user.email;
             req.body.userId = userId;
-            next();
+            req.body.auth = true;
+            return next();
         })
         .catch((err) => {
             console.error(`GET /profile: ${err}`);

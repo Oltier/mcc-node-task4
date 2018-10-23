@@ -47,7 +47,6 @@ userSchema.methods.comparePassword = function(password, cb) {
 
     bcrypt.compare(password, this.password, (err, isMatch) => {
         if(err) return cb(err);
-        console.error(`POST /login: Entered password: ${password} , Password in db: ${this.password}`);
         cb(null, isMatch);
     })
 };
