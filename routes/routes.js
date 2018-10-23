@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+
 const User = mongoose.model('User');
 
 router.get('/register', (req, res, next) => {
@@ -49,11 +52,12 @@ router.post('/register', (req, res, next) => {
 
                 User.create(user)
                     .then(() => {
+                        const token = generateJwt(user);
                         res.status(201);
                         res.json({
                             message: "User has been successfully registered",
                             auth: true,
-                            token: '' //TODO Add actual token
+                            token
                         })
                     })
                     .catch((err) => {
@@ -109,5 +113,16 @@ router.get('/logout', (req, res, next) => {
     //TODO Logout logic
     res.redirect('/login');
 });
+
+function generateJwt(user) {
+    const payload = {
+        id: user._id
+    };
+    const expiration = {
+        expiresIn: '24h'
+    };
+
+    return jwt.sign(payload, config.secret, expiration);
+}
 
 module.exports = router;
