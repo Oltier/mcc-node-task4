@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/routes');
 
@@ -36,8 +37,21 @@ app.use((err, req, res, next) => {
   res.render('error');
 });
 
+const dbUrl = "mongodb://localhost:27017";
+
+mongoose.connect(dbUrl, {useNewUrlParser: true});
+mongoose.Promise = global.Promise;
+app.db = mongoose.connection;
+
 const server = app.listen(3000, 'localhost', function () {
     console.log('Server started.');
+    app.db.on('error', function(){
+        console.error("Couldn't connect to database.");
+        process.exit(1)
+    });
+    app.db.once('open', function () {
+        console.log("Database is started.");
+    })
 });
 
 module.exports = app;
