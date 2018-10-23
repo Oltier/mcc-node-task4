@@ -31,7 +31,7 @@ router.post('/register', (req, res, next) => {
         return;
     }
 
-    if(password !== passwordConf) {
+    if (password !== passwordConf) {
         res.status(400);
         res.json({
             message: 'Passwords do not match.'
@@ -39,10 +39,9 @@ router.post('/register', (req, res, next) => {
         return;
     }
 
-    //TODO Do registering
     User.find({username: userName})
         .then((user) => {
-            if(user !== null) {
+            if (user !== null) {
                 res.sendStatus(409);
             } else {
                 const user = new User();
@@ -52,7 +51,7 @@ router.post('/register', (req, res, next) => {
 
                 User.create(user)
                     .then(() => {
-                        const token = generateJwt(user);
+                        req.session.token = generateJwt(user);
                         res.status(201);
                         res.json({
                             message: "User has been successfully registered",
@@ -88,21 +87,39 @@ router.post('/login', (req, res, next) => {
     if (typeof contentType === 'undefined' ||
         contentType !== 'application/json' ||
         missingFields.length > 0) {
-        res.status(500);
+        res.status(400);
         res.json({
             message: "All fields required."
         });
         return;
     }
 
-    //TODO Error logic
-    res.status(401);
-    res.json({
-        message: "Wrong email or password."
-    });
+    User.findOne({email})
+        .then((user) => {
+            if (!user) {
+                res.status(401).json({
+                    message: "Wrong email or password."
+                });
+                return;
+            }
 
-    //TODO Success logic
-    res.redirect('/profile');
+            user.comparePassword(password, (err, isMatch) => {
+                if (err) {
+                    console.error(err);
+                    res.sendStatus(500);
+                    return;
+                }
+
+                if (isMatch) {
+                    req.session.token = generateJwt(user);
+                    res.redirect('/profile');
+                } else {
+                    res.status(401).json({
+                        message: "Wrong email or password."
+                    });
+                }
+            });
+        });
 });
 
 router.get('/profile', (req, res, next) => {
@@ -110,7 +127,9 @@ router.get('/profile', (req, res, next) => {
 });
 
 router.get('/logout', (req, res, next) => {
-    //TODO Logout logic
+    req.session.destroy((err) => {
+        console.error(err);
+    });
     res.redirect('/login');
 });
 
