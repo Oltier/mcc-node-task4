@@ -41,9 +41,10 @@ router.post('/register', (req, res, next) => {
         return;
     }
 
-    User.find({username: userName})
+    User.findOne({username: userName})
         .then((user) => {
             if (user !== null) {
+                console.error(user);
                 res.sendStatus(409);
             } else {
                 const user = new User();
@@ -96,9 +97,10 @@ router.post('/login', (req, res, next) => {
         return;
     }
 
-    User.findOne({email})
+    User.findOne({email: email})
         .then((user) => {
             if (!user) {
+                console.error(`User not found with email: ${email} , ${req.body.logemail}`);
                 res.status(401).json({
                     message: "Wrong email or password."
                 });
@@ -116,6 +118,7 @@ router.post('/login', (req, res, next) => {
                     req.session.token = generateJwt(user);
                     res.redirect('/profile');
                 } else {
+                    console.error("Passwords didn't match.");
                     res.status(401).json({
                         message: "Wrong email or password."
                     });
