@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         unique: true,
-        lowercase: true,
         required: true,
         trim: true
     },
@@ -39,7 +38,7 @@ userSchema.pre('save', function(next) {
 
    this.genHash(this.password, (err, hash) => {
        if(err) return next(err);
-       user.password = hash;
+       this.password = hash;
        next();
     })
 });
@@ -48,7 +47,7 @@ userSchema.methods.comparePassword = function(password, cb) {
 
     bcrypt.compare(password, this.password, (err, isMatch) => {
         if(err) return cb(err);
-        console.error(`Entered password: ${password} , Password in db: ${this.password}`);
+        console.error(`POST /login: Entered password: ${password} , Password in db: ${this.password}`);
         cb(null, isMatch);
     })
 };
